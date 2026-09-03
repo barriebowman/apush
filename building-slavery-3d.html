@@ -997,7 +997,7 @@ const easeInOut = t => t<.5 ? 2*t*t : -1+(4-2*t)*t;
 const TAU = Math.PI*2;
 const Y_AXIS = new THREE.Vector3(0,1,0);
 
-const CFG = { eyeHeight: 1.62, walkSpeed: 2.25, radius: 0.36, interactDist: 3.8, lookSens: 0.0021, pixelRatioMax: 1.5, fov: 68 };
+const CFG = { eyeHeight: 1.62, walkSpeed: 3.4, radius: 0.36, interactDist: 3.8, lookSens: 0.0021, pixelRatioMax: 1.5, fov: 68 };
 
 /* ---------------- MUSEUM PLAN ----------------
    Lobby centred on the origin; +z is south (entrance). Attached rooms hang off a lobby wall (side)
@@ -1088,6 +1088,7 @@ const M = {
   stoneFloorDark: new THREE.MeshStandardMaterial({ map:TEX.stone, color:0x6e675c, roughness:.7, envMapIntensity:.4 }),
   ceiling: new THREE.MeshStandardMaterial({ color:0x1b1712, roughness:.95, envMapIntensity:.2 }),
   darkWood: new THREE.MeshStandardMaterial({ color:0x3a2718, roughness:.5, metalness:.05, envMapIntensity:.8 }),
+  beam: new THREE.MeshStandardMaterial({ color:0x35241a, roughness:.88, metalness:0, envMapIntensity:.2 }),
   frameWood: new THREE.MeshStandardMaterial({ color:0x2e1d10, roughness:.42, metalness:.08, envMapIntensity:1 }),
   brass: new THREE.MeshStandardMaterial({ color:0xc9a24b, roughness:.34, metalness:.85, envMapIntensity:1.2 }),
   brassDeep: new THREE.MeshStandardMaterial({ color:0x8f6e2e, roughness:.4, metalness:.8, envMapIntensity:1.1 }),
@@ -1403,9 +1404,9 @@ async function buildRoom(r){
   const dadoMat = new THREE.MeshStandardMaterial({ color:new THREE.Color(r.meta.hi), roughness:.8 });
   g.add(box(w-0.02, 0.05, 0.03, dadoMat, 0, 1.0, -d/2 + t/2 + 0.02), box(0.03, 0.05, d-0.02, dadoMat, -w/2 + t/2 + 0.02, 1.0, 0), box(0.03, 0.05, d-0.02, dadoMat, w/2 - t/2 - 0.02, 1.0, 0));
   // ceiling structure: none → sparse → dense as the system hardens
-  if (st.beams==='sparse'){ for (let z=-d/2+3; z<d/2-0.5; z+=3) g.add(box(w, 0.32, 0.22, M.darkWood, 0, h-0.16, z)); }
-  if (st.beams==='dense'){ for (let z=-d/2+1.5; z<d/2-0.5; z+=1.5) g.add(box(w, 0.3, 0.2, M.darkWood, 0, h-0.15, z)); for (let x=-w/2+1.5; x<w/2-0.5; x+=1.5) g.add(box(0.2, 0.3, d, M.darkWood, x, h-0.15, 0)); }
-  if (st.ribs){ for (let z=-d/2+1.4; z<d/2-0.6; z+=1.4){ g.add(box(w-0.1, 0.4, 0.24, M.darkWood, 0, h-0.2, z)); g.add(box(0.24, 1.2, 0.22, M.darkWood, -w/2+t/2+0.12, h-0.9, z), box(0.24, 1.2, 0.22, M.darkWood, w/2-t/2-0.12, h-0.9, z)); } g.add(box(0.28, 0.36, d-0.2, M.darkWood, 0, h-0.18, 0)); }
+  if (st.beams==='sparse'){ for (let z=-d/2+3; z<d/2-0.5; z+=3) g.add(box(w, 0.31, 0.22, M.beam, 0, h-0.165, z)); }
+  if (st.beams==='dense'){ for (let z=-d/2+1.5; z<d/2-0.5; z+=1.5) g.add(box(w, 0.29, 0.2, M.beam, 0, h-0.155, z)); for (let x=-w/2+1.5; x<w/2-0.5; x+=1.5) g.add(box(0.2, 0.23, d, M.beam, x, h-0.125, 0)); }
+  if (st.ribs){ for (let z=-d/2+1.4; z<d/2-0.6; z+=1.4){ g.add(box(w-0.1, 0.39, 0.24, M.beam, 0, h-0.205, z)); g.add(box(0.24, 1.2, 0.22, M.beam, -w/2+t/2+0.12, h-0.9, z), box(0.24, 1.2, 0.22, M.beam, w/2-t/2-0.12, h-0.9, z)); } g.add(box(0.28, 0.33, d-0.2, M.beam, 0, h-0.175, 0)); }
   if (st.pilasters){ for (const u of [1/3, 2/3]){ const zl = d/2 - u*d; g.add(box(0.4, h, 0.5, M.stoneDark, -w/2 + t/2 + 0.2, h/2, zl, {solid:true, tile:2}), box(0.4, h, 0.5, M.stoneDark, w/2 - t/2 - 0.2, h/2, zl, {solid:true, tile:2})); }
     g.add(box(0.5, h, 0.4, M.stoneDark, 0, h/2, -d/2 + t/2 + 0.2, {solid:true, tile:2})); }
   if (st.rail){ // courtroom bar: the visitor passes through the gap to reach the far wall
@@ -1421,7 +1422,7 @@ async function buildRoom(r){
   const room = r.data;
   point(g, 0, h-0.6, 0.5, { color: mood==='tense' ? 0xffcf9a : 0xffdcb0, intensity: mood==='tense' ? 15 : 16, distance:16 });
   if (st.clerestory){ const sky = new THREE.Mesh(new THREE.PlaneGeometry(w*0.6, 1.1), new THREE.MeshBasicMaterial({ color:0xcfdbe6 })); sky.rotation.x = Math.PI/2; sky.position.set(0, h-0.01, -0.6); g.add(sky);
-    g.add(box(w*0.6+0.2, 0.08, 1.3, M.darkWood, 0, h-0.06, -0.6)); for (let i=-2;i<=2;i++) g.add(box(0.06, 0.1, 1.3, M.darkWood, i*w*0.12, h-0.05, -0.6)); point(g, 0, h-1.1, -0.6, { color:0x9db4cc, intensity:8, distance:13 }); }
+    g.add(box(w*0.6+0.2, 0.06, 1.3, M.beam, 0, h-0.05, -0.6)); for (let i=-2;i<=2;i++) g.add(box(0.06, 0.08, 1.3, M.beam, i*w*0.12, h-0.06, -0.6)); point(g, 0, h-1.1, -0.6, { color:0x9db4cc, intensity:8, distance:13 }); }
   if (st.twoTone){ point(g, -w/4, h-0.9, -d/4, { color:0xffb96a, intensity:12, distance:11 }); point(g, w/4, h-0.9, -d/4, { color:0xc9e0c4, intensity:12, distance:11 }); }
   // introduction panel beside the doorway
   const intro = plaque(introPanelTexture(room), 1.75, 1.2, 0.04, M.darkWood); const ip = wallPoint(r, 'near', 0.22, 1.72); intro.position.copy(ip.pos); intro.rotation.y = ip.rotY; g.add(intro);
@@ -1443,9 +1444,9 @@ function buildLobby(){
   const L = PLAN.lobby, t = PLAN.wallT, g = new THREE.Group(); scene.add(g); const wallMat = plaster(0x342d26);
   const floor = new THREE.Mesh(scalePlaneUV(new THREE.PlaneGeometry(L.w, L.d), L.w, L.d, 4), M.stoneFloor); floor.rotation.x = -Math.PI/2; floor.receiveShadow = true; g.add(floor);
   const ceil = new THREE.Mesh(new THREE.PlaneGeometry(L.w, L.d), M.ceiling); ceil.rotation.x = Math.PI/2; ceil.position.y = L.h; g.add(ceil);
-  for (let x=-L.w/2+3.5; x<L.w/2; x+=3.5) g.add(box(0.3, 0.5, L.d, M.darkWood, x, L.h-0.25, 0)); for (let z=-L.d/2+3; z<L.d/2; z+=3) g.add(box(L.w, 0.5, 0.3, M.darkWood, 0, L.h-0.25, z));
+  for (let x=-L.w/2+3.5; x<L.w/2; x+=3.5) g.add(box(0.3, 0.49, L.d, M.beam, x, L.h-0.255, 0)); for (let z=-L.d/2+3; z<L.d/2; z+=3) g.add(box(L.w, 0.41, 0.3, M.beam, 0, L.h-0.215, z));
   const sky = new THREE.Mesh(new THREE.PlaneGeometry(9, 7), new THREE.MeshBasicMaterial({ color:0xffe3bd })); sky.rotation.x = Math.PI/2; sky.position.set(0, L.h-0.02, 0); g.add(sky);
-  g.add(box(9.4, 0.6, 0.25, M.darkWood, 0, L.h-0.3, -3.6), box(9.4, 0.6, 0.25, M.darkWood, 0, L.h-0.3, 3.6), box(0.25, 0.6, 7.4, M.darkWood, -4.6, L.h-0.3, 0), box(0.25, 0.6, 7.4, M.darkWood, 4.6, L.h-0.3, 0));
+  g.add(box(9.4, 0.59, 0.25, M.beam, 0, L.h-0.305, -3.6), box(9.4, 0.59, 0.25, M.beam, 0, L.h-0.305, 3.6), box(0.25, 0.55, 7.4, M.beam, -4.6, L.h-0.285, 0), box(0.25, 0.55, 7.4, M.beam, 4.6, L.h-0.285, 0));
   const ops = { w:[], n:[], e:[], s:[{ c:0, w:PLAN.entrance.w, h:PLAN.entrance.h }] }; for (const r of PLAN.rooms) ops[r.side].push({ c:r.along, w:PLAN.door.w, h:PLAN.door.h });
   wall(g, { axis:'z', at:-L.w/2, from:-L.d/2, to:L.d/2, h:L.h, t, openings:ops.w, mat:wallMat }); wall(g, { axis:'z', at: L.w/2, from:-L.d/2, to:L.d/2, h:L.h, t, openings:ops.e, mat:wallMat });
   wall(g, { axis:'x', at:-L.d/2, from:-L.w/2, to:L.w/2, h:L.h, t, openings:ops.n, mat:wallMat }); wall(g, { axis:'x', at: L.d/2, from:-L.w/2, to:L.w/2, h:L.h, t, openings:ops.s, mat:M.stone });
@@ -1485,7 +1486,8 @@ function buildExterior(){
   const frieze = new THREE.Mesh(new THREE.PlaneGeometry(9.4, 1.17), new THREE.MeshBasicMaterial({ map:friezeTexture(), transparent:true })); frieze.position.set(0, L.h+0.45, z0 + P.depth + 0.215); g.add(frieze);
   const tri = new THREE.Shape(); tri.moveTo(-(pw+0.8)/2, 0); tri.lineTo((pw+0.8)/2, 0); tri.lineTo(0, 2.0); tri.lineTo(-(pw+0.8)/2, 0);
   const ped = new THREE.Mesh(new THREE.ExtrudeGeometry(tri, { depth:P.depth+0.6, bevelEnabled:false }), M.stone); ped.position.set(0, L.h+0.9, z0 - 0.4); g.add(ped);
-  g.add(box(L.w + 0.6, 0.6, L.d + 0.6, M.stoneDark, 0, L.h + 0.3, 0)); for (const r of PLAN.rooms) g.add(box(r.rect.maxX - r.rect.minX + 0.5, 0.5, r.rect.maxZ - r.rect.minZ + 0.5, M.stoneDark, r.cx, r.h + 0.25, r.cz));
+  // roof slabs sit 6 cm above the ceilings so their undersides never share a plane with them
+  g.add(box(L.w + 0.6, 0.6, L.d + 0.6, M.stoneDark, 0, L.h + 0.36, 0)); for (const r of PLAN.rooms) g.add(box(r.rect.maxX - r.rect.minX + 0.4, 0.5, r.rect.maxZ - r.rect.minZ + 0.4, M.stoneDark, r.cx, r.h + 0.31, r.cz)); // 0.2 overhang ends inside the 0.5 m walls, never on a wall face
   for (const [x, z] of [[-4.4, z0 + P.depth + P.stepDepth*P.steps + 1.0], [4.4, z0 + P.depth + P.stepDepth*P.steps + 1.0], [-4.4, z0 + P.depth + 11], [4.4, z0 + P.depth + 11]]){
     const post = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.08, 2.8, 10), M.brassDeep); post.position.set(x, GROUND_Y+1.4, z); g.add(post); g.add(box(0.5, 0.2, 0.5, M.stoneDark, x, GROUND_Y+0.1, z, {solid:true}));
     const globe = new THREE.Mesh(new THREE.SphereGeometry(0.2, 12, 10), M.glow); globe.position.set(x, GROUND_Y+2.95, z); g.add(globe); point(g, x, GROUND_Y+2.95, z, { color:0xffc98a, intensity:26, distance:18 });
